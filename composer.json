@@ -1,0 +1,15 @@
+{
+  "name": "almostusable/psr4-autoloader",
+  "description": "A minimalistic PSR-4 autoloader implementation for PHP projects",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Jan Doležal",
+      "email": "dolezal29@outlook.com"
+    }
+  ],
+  "require": {
+    "php": ">=8.1"
+  }
+}
