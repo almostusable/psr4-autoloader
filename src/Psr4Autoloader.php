@@ -97,20 +97,34 @@ class Psr4Autoloader
     /**
      * Load namespace mappings from composer.json
      *
-     * @param string $composerJsonPath Path to composer.json file
+     * @param string|null $composerJsonPath Path to composer.json file
      * @return bool True if mappings were loaded successfully, false otherwise
      * @throws RuntimeException If there's an error loading the composer.json file
      */
-    public function loadMappingsFromComposer(string $composerJsonPath = 'composer.json'): bool
+    public function loadMappingsFromComposer(): bool
     {
         try {
+            $dir = __DIR__;
+            $composerJsonPath = '';
+
+            // Go up the directory tree until we find composer.json or reach the filesystem root
+            while ($dir !== '/' && $dir !== '') {
+                $potentialPath = $dir . '/composer.json';
+                if (file_exists($potentialPath)) {
+                    $composerJsonPath = $potentialPath;
+                    break;
+                }
+                // Go up one directory
+                $dir = dirname($dir);
+            }
+
             if (!file_exists($composerJsonPath)) {
-                throw new RuntimeException('composer.json file not found');
+                throw new RuntimeException('composer.json file not found at: ' . $composerJsonPath);
             }
 
             $content = file_get_contents($composerJsonPath);
             if ($content === false) {
-                throw new RuntimeException('Failed to read composer.json');
+                throw new RuntimeException('Failed to read composer.json from: ' . $composerJsonPath);
             }
 
             $configuration = json_decode($content, true);
