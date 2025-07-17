@@ -107,19 +107,38 @@ class Psr4Autoloader
             $dir = __DIR__;
             $composerJsonPath = '';
 
-            // Go up the directory tree until we find composer.json or reach the filesystem root
+            // First, try to find composer.json outside vendor directory
+            $foundInVendor = false;
+            $vendorComposerPath = '';
+
             while ($dir !== '/' && $dir !== '') {
                 $potentialPath = $dir . '/composer.json';
                 if (file_exists($potentialPath)) {
-                    $composerJsonPath = $potentialPath;
-                    break;
+                    // Check if we're in the vendor directory
+                    if (strpos($potentialPath, '/vendor/') === false) {
+                        $composerJsonPath = $potentialPath;
+                        break;
+                    } else {
+                        // Remember the first composer.json we find in vendor as fallback
+                        if (empty($vendorComposerPath)) {
+                            $vendorComposerPath = $potentialPath;
+                            $foundInVendor = true;
+                        }
+                    }
                 }
                 // Go up one directory
                 $dir = dirname($dir);
             }
 
-            if (!file_exists($composerJsonPath)) {
-                throw new RuntimeException('composer.json file not found at: ' . $composerJsonPath);
+            // If we didn't find a composer.json outside vendor, but found one in vendor, use it as fallback
+            if (empty($composerJsonPath) && $foundInVendor) {
+                $composerJsonPath = $vendorComposerPath;
+                // Uncomment for debugging
+                // error_log('PSR4Autoloader: Using vendor composer.json as fallback at ' . $composerJsonPath);
+            }
+
+            if (empty($composerJsonPath) || !file_exists($composerJsonPath)) {
+                throw new RuntimeException('No composer.json file found. Make sure this package is installed in a project with a composer.json file at its root.');
             }
 
             $content = file_get_contents($composerJsonPath);
